@@ -54,7 +54,7 @@ const ThemeWrapper = ({ mode, modeHandler, children }) => {
     <Paper
       elevation={0}
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
         borderRadius: 0,
       }}
     >

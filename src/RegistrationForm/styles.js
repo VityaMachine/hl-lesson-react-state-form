@@ -24,6 +24,10 @@ const styles = {
   checkboxControlLabel: {
     pl: "90px",
   },
+
+  errorRadioStyle: (genderError) => ({
+    color: genderError && "error.main",
+  }),
 };
 
 export default styles;

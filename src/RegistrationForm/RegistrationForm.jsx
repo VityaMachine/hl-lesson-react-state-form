@@ -15,8 +15,9 @@ import {
   FormGroup,
   Checkbox,
   Grid,
-  Typography,
+  FormHelperText,
   Autocomplete,
+  Button,
 } from "@mui/material";
 
 import Visibility from "@mui/icons-material/Visibility";
@@ -80,13 +81,13 @@ export default class RegistrationForm extends Component {
     });
   };
 
-
-  handleCityChange = (e, newCity) => this.setState({
-    formData: {
-      ...this.state.formData,
-      city: newCity
-    }
-  })
+  handleCityChange = (e, newCity) =>
+    this.setState({
+      formData: {
+        ...this.state.formData,
+        city: newCity,
+      },
+    });
 
   handleCheckBoxChange = (e) => {
     this.setState({
@@ -106,6 +107,55 @@ export default class RegistrationForm extends Component {
     }));
   };
 
+  handleValidateData = () => {
+    const { username, password, repassword, email, age, gender } =
+      this.state.formData;
+    const passRegex = new RegExp(
+      "^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})"
+    );
+    const emailRegex = new RegExp("[a-z0-9]+@[a-z]+.[a-z]{2,3}");
+
+    this.setState({
+      errorsData: {
+        usernameError: username.length < 8,
+        passwordError: !passRegex.test(password) || password !== repassword,
+        emailError: !emailRegex.test(email),
+        ageError: age.length < 1,
+        genderError: gender.length < 1,
+      },
+    });
+
+    return (
+      username.length < 8 ||
+      !passRegex.test(password) ||
+      password !== repassword ||
+      !emailRegex.test(email) ||
+      age.length < 1 ||
+      gender.length < 1
+    );
+  };
+
+  handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    const isError = this.handleValidateData();
+
+    if (isError) {
+      return;
+    }
+
+    alert(JSON.stringify(this.state.formData));
+  };
+
+  handleResetFieldError = (stateErrorName) => {
+    this.setState({
+      errorsData: {
+        ...this.state.errorsData,
+        [stateErrorName]: false,
+      },
+    });
+  };
+
   render() {
     const {
       username,
@@ -118,11 +168,14 @@ export default class RegistrationForm extends Component {
       activities,
     } = this.state.formData;
 
+    const { usernameError, passwordError, emailError, ageError, genderError } =
+      this.state.errorsData;
+
     const { isPasswordVisible } = this.state;
 
     return (
       <Paper>
-        <form>
+        <form onSubmit={this.handleFormSubmit}>
           <Container maxWidth="sm" sx={styles.formContainer}>
             <TextField
               name="username"
@@ -130,6 +183,15 @@ export default class RegistrationForm extends Component {
               onChange={this.handleInputChange}
               variant="outlined"
               label="Username"
+              error={usernameError}
+              helperText={
+                usernameError &&
+                "Username length must be equal or more then 8 symbols"
+              }
+              onClick={
+                usernameError &&
+                (() => this.handleResetFieldError("usernameError"))
+              }
               sx={styles.formTextInput}
             />
 
@@ -141,6 +203,11 @@ export default class RegistrationForm extends Component {
               label="Enter password"
               sx={styles.formTextInput}
               type={isPasswordVisible ? "text" : "password"}
+              error={passwordError}
+              helperText={
+                passwordError &&
+                "Wrong password or repeat password. Pass must include lowercase, uppercase and special sybmol. Length must be over 8 symbols"
+              }
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -154,6 +221,10 @@ export default class RegistrationForm extends Component {
                   </InputAdornment>
                 ),
               }}
+              onClick={
+                passwordError &&
+                (() => this.handleResetFieldError("passwordError"))
+              }
             />
 
             <TextField
@@ -177,6 +248,11 @@ export default class RegistrationForm extends Component {
                   </InputAdornment>
                 ),
               }}
+              error={passwordError}
+              onClick={
+                passwordError &&
+                (() => this.handleResetFieldError("passwordError"))
+              }
             />
             <TextField
               name="email"
@@ -185,6 +261,11 @@ export default class RegistrationForm extends Component {
               variant="outlined"
               label="Email"
               sx={styles.formTextInput}
+              error={emailError}
+              helperText={emailError && "Wrong email"}
+              onClick={
+                emailError && (() => this.handleResetFieldError("emailError"))
+              }
             />
 
             <TextField
@@ -195,6 +276,11 @@ export default class RegistrationForm extends Component {
               name="age"
               sx={styles.formTextInput}
               variant="outlined"
+              error={ageError}
+              helperText={ageError && "Please select your age"}
+              onClick={
+                ageError && (() => this.handleResetFieldError("ageError"))
+              }
             >
               <MenuItem value="14-19">14-19</MenuItem>
               <MenuItem value="20-28">20-28</MenuItem>
@@ -204,7 +290,11 @@ export default class RegistrationForm extends Component {
             </TextField>
 
             <FormControl sx={styles.formTextInput}>
-              <FormLabel id="gender-radio-select" sx={styles.redioLabel}>
+              <FormLabel
+                id="gender-radio-select"
+                sx={styles.redioLabel}
+                error={genderError}
+              >
                 Gender
               </FormLabel>
               <RadioGroup
@@ -217,37 +307,57 @@ export default class RegistrationForm extends Component {
               >
                 <FormControlLabel
                   value="male"
-                  control={<Radio />}
+                  control={
+                    <Radio
+                      sx={styles.errorRadioStyle(genderError)}
+                      onClick={() => this.handleResetFieldError("genderError")}
+                    />
+                  }
                   label="Male"
+                  sx={styles.errorRadioStyle(genderError)}
                 />
                 <FormControlLabel
                   value="female"
-                  control={<Radio />}
+                  control={
+                    <Radio
+                      sx={styles.errorRadioStyle(genderError)}
+                      onClick={() => this.handleResetFieldError("genderError")}
+                    />
+                  }
                   label="Female"
+                  sx={styles.errorRadioStyle(genderError)}
                 />
               </RadioGroup>
+              {genderError && (
+                <FormHelperText sx={styles.errorRadioStyle(genderError)}>
+                  Select your gender
+                </FormHelperText>
+              )}
             </FormControl>
 
             <Autocomplete
               options={cities}
               inputValue={this.state.cityInput}
-              onInputChange={(e, newValue) => (
+              onInputChange={(e, newValue) =>
                 this.setState({
-                  cityInput: newValue
+                  cityInput: newValue,
                 })
-              )}
+              }
               value={city}
               onChange={this.handleCityChange}
               disableClearable
-         
               sx={styles.formTextInput}
               renderInput={(params) => {
-               return <TextField {...params} name="city" label="Select your city" variant="standard" />
-              }
-            
-            }
+                return (
+                  <TextField
+                    {...params}
+                    name="city"
+                    label="Select your city"
+                    variant="standard"
+                  />
+                );
+              }}
             />
-
 
             <FormLabel sx={styles.checkboxTitleLabel}>
               Choose your activities:
@@ -272,7 +382,16 @@ export default class RegistrationForm extends Component {
               </Grid>
             </FormGroup>
 
-            
+            <Button
+              type="submit"
+              variant="contained"
+              color="success"
+              sx={{
+                my: "20px",
+              }}
+            >
+              Submit
+            </Button>
           </Container>
         </form>
       </Paper>
